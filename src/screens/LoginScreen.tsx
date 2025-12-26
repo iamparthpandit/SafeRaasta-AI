@@ -57,7 +57,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   };
 
   const handleSignUp = () => {
-    console.log('Sign Up pressed');
+    if (navigation) {
+      navigation.navigate('SignUp');
+    }
   };
 
   return (
