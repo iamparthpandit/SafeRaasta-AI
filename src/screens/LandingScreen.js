@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
   position: 'absolute',
-  bottom: height * 0.12,   // 🔑 MAGIC LINE
+  bottom: height * 0.12,   //For adjusting the Overall Bottom Heighttt
   width: '100%',
   alignItems: 'center',
 },
