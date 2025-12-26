@@ -55,9 +55,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     setLoading(true);
     try {
       const result = await loginWithEmail(email, password);
-      Alert.alert('Success', result.message);
       console.log('Logged in user:', result.user);
-      // TODO: Navigate to home screen after successful login
+      // Navigate to Landing screen after successful login
+      if (navigation) {
+        navigation.navigate('Landing');
+      }
     } catch (error) {
       Alert.alert('Login Failed', error.message);
     } finally {

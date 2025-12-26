@@ -78,10 +78,12 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
     setLoading(true);
     try {
       const result = await signUpWithEmail(email, password);
-      Alert.alert('Success', result.message);
       console.log('New user created:', result.user);
       // TODO: Save fullName to Firestore/profile later
-      // TODO: Navigate to home screen after successful signup
+      // Navigate to Landing screen after successful signup
+      if (navigation) {
+        navigation.navigate('Landing');
+      }
     } catch (error) {
       Alert.alert('Sign Up Failed', error.message);
     } finally {
