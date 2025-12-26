@@ -7,9 +7,11 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
+import { loginWithEmail } from '../services/authService';
 
 // Icon components (using Unicode characters for simplicity)
 const EmailIcon = () => (
@@ -41,13 +43,34 @@ interface LoginScreenProps {
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    console.log('Login pressed');
+  const handleLogin = async () => {
+    // Basic validation
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await loginWithEmail(email, password);
+      Alert.alert('Success', result.message);
+      console.log('Logged in user:', result.user);
+      // TODO: Navigate to home screen after successful login
+    } catch (error) {
+      Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
-    console.log('Google Sign In pressed');
+    Alert.alert(
+      'Google Sign-In',
+      'Google Sign-In will be implemented soon!',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleForgotPassword = () => {

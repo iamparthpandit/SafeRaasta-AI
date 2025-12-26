@@ -7,9 +7,11 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
+import { signUpWithEmail } from '../services/authService';
 
 // Icon components
 const UserIcon = () => (
@@ -49,14 +51,50 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = () => {
-    console.log('Sign Up pressed', { fullName, email, password, confirmPassword });
-    // Firebase logic later
+  const handleSignUp = async () => {
+    // Basic validation
+    if (!fullName.trim()) {
+      Alert.alert('Error', 'Please enter your full name');
+      return;
+    }
+    
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await signUpWithEmail(email, password);
+      Alert.alert('Success', result.message);
+      console.log('New user created:', result.user);
+      // TODO: Save fullName to Firestore/profile later
+      // TODO: Navigate to home screen after successful signup
+    } catch (error) {
+      Alert.alert('Sign Up Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
-    console.log('Google Sign In pressed');
+    Alert.alert(
+      'Google Sign-In',
+      'Google Sign-In will be implemented soon!',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleLogIn = () => {

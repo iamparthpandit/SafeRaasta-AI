@@ -7,9 +7,11 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
+import { sendPasswordReset } from '../services/authService';
 
 // Email icon component
 const EmailIcon = () => (
@@ -27,10 +29,27 @@ interface ForgotPasswordScreenProps {
 
 export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSendResetLink = () => {
-    console.log('Send reset link to:', email);
-    // Firebase logic will be added later
+  const handleSendResetLink = async () => {
+    // Basic validation
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await sendPasswordReset(email);
+      Alert.alert('Success', result.message);
+      console.log('Password reset email sent to:', email);
+      // Optionally navigate back to login after success
+      // navigation.goBack();
+    } catch (error) {
+      Alert.alert('Reset Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToLogin = () => {
