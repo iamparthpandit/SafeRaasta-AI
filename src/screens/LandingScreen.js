@@ -64,8 +64,9 @@ export default function LandingScreen({ navigation }) {
   }, [fadeAnim]);
 
   const handleCheckRouteSafety = () => {
-    console.log('Check Route Safety pressed');
-    // TODO: Navigate to route safety screen
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Map');
+    }
   };
 
   const currentSlide = SLIDES[currentIndex];

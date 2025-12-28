@@ -15,7 +15,11 @@
     "@react-navigation/stack": "^7.6.13",
     "firebase": "^12.7.0",
     "react": "19.2.0",
-    "react-native": "0.83.1"
+    "react-native": "0.83.1",
+    "react-native-geolocation-service": "^5.3.1",
+    "react-native-google-places-autocomplete": "^2.6.3",
+    "react-native-maps": "^1.26.20",
+    "react-native-permissions": "^5.4.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
