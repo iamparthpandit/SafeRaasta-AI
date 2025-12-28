@@ -77,18 +77,20 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.saferaasta"
+    namespace "com.saferaastaai"
     defaultConfig {
-        applicationId "com.saferaasta"
+        applicationId "com.saferaastaai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         
+        // Fix for React Native 0.83.1 C++ std::format compilation error
+        // This disables the problematic code generation
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++20", "-DFOLLY_USE_LIBCPP=1"
-                arguments "-DANDROID_STL=c++_shared"
+                arguments "-DREACT_NATIVE_DISABLE_FABRIC_COMPONENTS=ON"
+                cppFlags ""
             }
         }
         
@@ -115,6 +117,42 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+    }
+}
+
+// Patch React Native 0.83.1 graphicsConversions.h std::format bug
+task patchReactNativeGraphics {
+    doLast {
+        def userHome = System.getProperty("user.home")
+        def cacheDir = new File("$userHome/.gradle/caches")
+        if (!cacheDir.exists()) return
+        
+        println "🔍 Searching for graphicsConversions.h in Gradle cache..."
+        
+        cacheDir.eachFileRecurse { file ->
+            if (file.name == "graphicsConversions.h" && file.path.contains("react-android-0.83")) {
+                def content = file.text
+                
+                if (content.contains("return std::format") && !content.contains("// PATCHED")) {
+                    println "📝 Patching: $file.path"
+                    content = content.replace(
+                        'return std::format("{}%", dimension.value);',
+                        'return folly::to<std::string>(dimension.value) + "%"; // PATCHED for RN 0.83.1'
+                    )
+                    file.text = content
+                    println "✅ Patched successfully!"
+                } else if (content.contains("// PATCHED")) {
+                    println "✅ Already patched: $file.path"
+                }
+            }
+        }
+    }
+}
+
+// Run patch before CMake configuration
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('configureCMake')) {
+        task.dependsOn patchReactNativeGraphics
     }
 }
 

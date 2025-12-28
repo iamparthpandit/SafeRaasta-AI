@@ -1,4 +1,4 @@
-package com.saferaasta
+package com.saferaastaai
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

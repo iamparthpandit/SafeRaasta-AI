@@ -49,8 +49,8 @@ export default function MapScreen({ navigation }) {
 
   React.useEffect(() => {
     console.log('MapScreen mounted');
-    console.log('API Key in AndroidManifest: AIzaSyBAG9ee_Yr-txzHbiazTgFoLWa2bgpX5T4');
-    console.log('Package name: com.saferaasta');
+    console.log('API Key in AndroidManifest: AIzaSyAE8jFRCCsZ0PtL8JArylXYGg6d2jEZmN4');
+    console.log('Package name: com.saferaastaai');
     console.log('If map is black, enable Maps SDK for Android in console');
   }, []);
 

@@ -1,4 +1,4 @@
-package com.saferaasta
+package com.saferaastaai
 
 import android.app.Application
 import com.facebook.react.PackageList
