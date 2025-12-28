@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1061233246818",
+    "project_id": "saferaastaai",
+    "storage_bucket": "saferaastaai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061233246818:android:71a9c490b7a9f7cdca473b",
+        "android_client_info": {
+          "package_name": "com.saferaastaai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1061233246818-7ahgo9lgr3l6l401v574ji5tuflg1r20.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.saferaastaai",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "1061233246818-uh66m163s48da04bjpp1llemi256fd0i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-DpA7sTZYV42sLnfhTqS_0I0xmczC9a8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1061233246818-uh66m163s48da04bjpp1llemi256fd0i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
