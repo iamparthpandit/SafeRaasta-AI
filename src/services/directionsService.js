@@ -1,73 +1,111 @@
-// Lightweight Directions service that calls Google Directions API
-// Returns an object: { routes: [{ polylineCoords, distance, duration, summary }], error }
+// Google Directions Service
+// Returns:
+// {
+//   routes: [
+//     {
+//       index,
+//       coords,
+//       distance,   // meters
+//       duration,   // seconds
+//       summary,
+//       bounds
+//     }
+//   ],
+//   error
+// }
 
 import { GOOGLE_API_KEY } from '../config/keys';
 
-// decode encoded polyline into [{latitude, longitude}, ...]
+/* ---------------- Polyline Decoder ---------------- */
+
 export function decodePolyline(encoded) {
   if (!encoded) return [];
-  let index = 0, len = encoded.length;
-  let lat = 0, lng = 0;
+
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
   const coordinates = [];
 
-  while (index < len) {
+  while (index < encoded.length) {
     let b, shift = 0, result = 0;
+
     do {
       b = encoded.charCodeAt(index++) - 63;
       result |= (b & 0x1f) << shift;
       shift += 5;
     } while (b >= 0x20);
-    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+
+    const dlat = result & 1 ? ~(result >> 1) : result >> 1;
     lat += dlat;
 
     shift = 0;
     result = 0;
+
     do {
       b = encoded.charCodeAt(index++) - 63;
       result |= (b & 0x1f) << shift;
       shift += 5;
     } while (b >= 0x20);
-    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+
+    const dlng = result & 1 ? ~(result >> 1) : result >> 1;
     lng += dlng;
 
-    coordinates.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+    coordinates.push({
+      latitude: lat / 1e5,
+      longitude: lng / 1e5,
+    });
   }
 
   return coordinates;
 }
 
+/* ---------------- Directions Fetch ---------------- */
+
 export async function getDirections(origin, destination, alternatives = true) {
-  // origin & destination should be { latitude, longitude }
-  if (!origin || !destination) return { routes: [], error: 'Missing coordinates' };
+  if (!origin || !destination) {
+    return { routes: [], error: 'Missing origin or destination coordinates' };
+  }
+
   try {
     const originStr = `${origin.latitude},${origin.longitude}`;
     const destStr = `${destination.latitude},${destination.longitude}`;
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}&alternatives=${alternatives ? 'true' : 'false'}&key=${GOOGLE_API_KEY}`;
+
+    const url =
+      `https://maps.googleapis.com/maps/api/directions/json` +
+      `?origin=${encodeURIComponent(originStr)}` +
+      `&destination=${encodeURIComponent(destStr)}` +
+      `&alternatives=${alternatives ? 'true' : 'false'}` +
+      `&key=${GOOGLE_API_KEY}`;
+
     const resp = await fetch(url);
     const json = await resp.json();
 
-    if (json.status !== 'OK' || !json.routes) {
-      return { routes: [], error: json.status || 'Directions error' };
+    if (json.status !== 'OK') {
+      return {
+        routes: [],
+        error: `Directions API error: ${json.status}`,
+      };
     }
 
-    const routes = json.routes.map((r) => {
-      const overview = r.overview_polyline?.points;
-      const coords = decodePolyline(overview);
-      const leg = r.legs && r.legs.length ? r.legs[0] : null;
-      const distance = leg?.distance?.value ?? null; // meters
-      const duration = leg?.duration?.value ?? null; // seconds
-      const summary = r.summary || '';
+    const routes = json.routes.map((route, index) => {
+      const leg = route.legs?.[0];
+
       return {
-        coords,
-        distance, // meters
-        duration, // seconds
-        summary,
+        index,
+        coords: decodePolyline(route.overview_polyline?.points),
+        distance: leg?.distance?.value ?? 0,
+        duration: leg?.duration?.value ?? 0,
+        summary: route.summary || '',
+        bounds: route.bounds || null,
       };
     });
 
     return { routes, error: null };
-  } catch (e) {
-    console.warn('Directions fetch failed', e);
-    return { routes: [], error: e.message };
+  } catch (error) {
+    console.error('Directions fetch failed:', error);
+    return {
+      routes: [],
+      error: error.message || 'Network error while fetching directions',
+    };
   }
 }
