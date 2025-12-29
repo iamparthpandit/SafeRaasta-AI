@@ -2,13 +2,21 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import colors from '../theme/colors';
 
+<<<<<<< HEAD
 export default function FloatingMapButtons() {
+=======
+export default function FloatingMapButtons({ onRecenter, onCurrentLocation }) {
+>>>>>>> origin/publish/to-iamparthpandit
   return (
     <View style={styles.container}>
       {/* Navigation/Recenter Button */}
       <TouchableOpacity
         style={styles.button}
+<<<<<<< HEAD
         onPress={() => console.log('Recenter map')}
+=======
+        onPress={() => onRecenter ? onRecenter() : console.log('Recenter map')}
+>>>>>>> origin/publish/to-iamparthpandit
         activeOpacity={0.7}
       >
         <Text style={styles.buttonIcon}>🧭</Text>
@@ -17,7 +25,11 @@ export default function FloatingMapButtons() {
       {/* Current Location Button */}
       <TouchableOpacity
         style={styles.button}
+<<<<<<< HEAD
         onPress={() => console.log('Go to current location')}
+=======
+        onPress={() => onCurrentLocation ? onCurrentLocation() : console.log('Go to current location')}
+>>>>>>> origin/publish/to-iamparthpandit
         activeOpacity={0.7}
       >
         <Text style={styles.buttonIcon}>📍</Text>

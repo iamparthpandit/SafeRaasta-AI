@@ -102,6 +102,7 @@ export default function LocationInputCard({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
+<<<<<<< HEAD
     top: 100,
     left: 20,
     right: 20,
@@ -114,6 +115,25 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
+=======
+    top: 70,
+    left: 16,
+    right: 16,
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 18,
+    zIndex: 999,
+    elevation: 12,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+>>>>>>> origin/publish/to-iamparthpandit
   },
   locationRow: {
     flexDirection: 'row',
