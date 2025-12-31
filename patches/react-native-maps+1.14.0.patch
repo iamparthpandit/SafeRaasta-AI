@@ -99,11 +99,11 @@ new file mode 100644
 index 0000000..e69de29
 diff --git a/node_modules/react-native-maps/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/react-native-maps/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
 new file mode 100644
-index 0000000..20dc8ab
+index 0000000..2ad866d
 --- /dev/null
 +++ b/node_modules/react-native-maps/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
 @@ -0,0 +1 @@
-+#Mon Dec 29 16:56:20 IST 2025
++#Tue Dec 30 15:52:44 IST 2025
 diff --git a/node_modules/react-native-maps/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/react-native-maps/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
 new file mode 100644
 index 0000000..552e576
@@ -527,8 +527,78 @@ index 0000000..7076d31
 +		INJECTED from C:\Projects\SafeRaasta\node_modules\react-native-maps\android\src\main\AndroidManifest.xml
 diff --git a/node_modules/react-native-maps/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/react-native-maps/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
 new file mode 100644
-index 0000000..8154880
+index 0000000..5046f18
 Binary files /dev/null and b/node_modules/react-native-maps/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
+diff --git a/node_modules/react-native-maps/lib/MapCallout.js b/node_modules/react-native-maps/lib/MapCallout.js
+index 568ddfe..7172efe 100644
+++ b/node_modules/react-native-maps/lib/MapCallout.js
++++ b/node_modules/react-native-maps/lib/MapCallout.js
+@@ -28,9 +28,6 @@ const React = __importStar(require("react"));
+ const react_native_1 = require("react-native");
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapCallout extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     render() {
+         const { tooltip = false, alphaHitTest = false } = this.props;
+         const AIRMapCallout = this.getNativeComponent();
+diff --git a/node_modules/react-native-maps/lib/MapCalloutSubview.js b/node_modules/react-native-maps/lib/MapCalloutSubview.js
+index 40cc7f3..d623483 100644
+--- a/node_modules/react-native-maps/lib/MapCalloutSubview.js
++++ b/node_modules/react-native-maps/lib/MapCalloutSubview.js
+@@ -28,9 +28,6 @@ const React = __importStar(require("react"));
+ const react_native_1 = require("react-native");
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapCalloutSubview extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     render() {
+         const AIRMapCalloutSubview = this.getNativeComponent();
+         return (<AIRMapCalloutSubview {...this.props} style={[styles.calloutSubview, this.props.style]}/>);
+diff --git a/node_modules/react-native-maps/lib/MapCircle.js b/node_modules/react-native-maps/lib/MapCircle.js
+index 0bd1636..d6f3063 100644
+--- a/node_modules/react-native-maps/lib/MapCircle.js
++++ b/node_modules/react-native-maps/lib/MapCircle.js
+@@ -27,9 +27,6 @@ exports.MapCircle = void 0;
+ const React = __importStar(require("react"));
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapCircle extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     circle;
+     constructor(props) {
+         super(props);
+diff --git a/node_modules/react-native-maps/lib/MapHeatmap.js b/node_modules/react-native-maps/lib/MapHeatmap.js
+index d23a5a6..177d8fb 100644
+--- a/node_modules/react-native-maps/lib/MapHeatmap.js
++++ b/node_modules/react-native-maps/lib/MapHeatmap.js
+@@ -28,9 +28,6 @@ const React = __importStar(require("react"));
+ const react_native_1 = require("react-native");
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapHeatmap extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     heatmap;
+     constructor(props) {
+         super(props);
+diff --git a/node_modules/react-native-maps/lib/MapLocalTile.js b/node_modules/react-native-maps/lib/MapLocalTile.js
+index 68efbcd..c90565b 100644
+--- a/node_modules/react-native-maps/lib/MapLocalTile.js
++++ b/node_modules/react-native-maps/lib/MapLocalTile.js
+@@ -27,9 +27,6 @@ exports.MapLocalTile = void 0;
+ const React = __importStar(require("react"));
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapLocalTile extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     render() {
+         const AIRMapLocalTile = this.getNativeComponent();
+         return <AIRMapLocalTile {...this.props}/>;
 diff --git a/node_modules/react-native-maps/lib/MapMarker.js b/node_modules/react-native-maps/lib/MapMarker.js
 index 90b689e..0df64b6 100644
 --- a/node_modules/react-native-maps/lib/MapMarker.js
@@ -541,3 +611,73 @@ index 90b689e..0df64b6 100644
      getMapManagerCommand;
      getUIManagerCommand;
      static Animated;
+diff --git a/node_modules/react-native-maps/lib/MapOverlay.js b/node_modules/react-native-maps/lib/MapOverlay.js
+index a3d7f50..28ce9a3 100644
+--- a/node_modules/react-native-maps/lib/MapOverlay.js
++++ b/node_modules/react-native-maps/lib/MapOverlay.js
+@@ -28,9 +28,6 @@ const React = __importStar(require("react"));
+ const react_native_1 = require("react-native");
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapOverlay extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     static Animated;
+     render() {
+         const { opacity = 1.0 } = this.props;
+diff --git a/node_modules/react-native-maps/lib/MapPolygon.js b/node_modules/react-native-maps/lib/MapPolygon.js
+index 86b8fee..543118b 100644
+--- a/node_modules/react-native-maps/lib/MapPolygon.js
++++ b/node_modules/react-native-maps/lib/MapPolygon.js
+@@ -27,9 +27,6 @@ exports.MapPolygon = void 0;
+ const React = __importStar(require("react"));
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapPolygon extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     polygon;
+     constructor(props) {
+         super(props);
+diff --git a/node_modules/react-native-maps/lib/MapPolyline.js b/node_modules/react-native-maps/lib/MapPolyline.js
+index b0efda7..b35ad9d 100644
+--- a/node_modules/react-native-maps/lib/MapPolyline.js
++++ b/node_modules/react-native-maps/lib/MapPolyline.js
+@@ -27,9 +27,6 @@ exports.MapPolyline = void 0;
+ const React = __importStar(require("react"));
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapPolyline extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     polyline;
+     constructor(props) {
+         super(props);
+diff --git a/node_modules/react-native-maps/lib/MapUrlTile.js b/node_modules/react-native-maps/lib/MapUrlTile.js
+index 1a079e2..9dec283 100644
+--- a/node_modules/react-native-maps/lib/MapUrlTile.js
++++ b/node_modules/react-native-maps/lib/MapUrlTile.js
+@@ -27,9 +27,6 @@ exports.MapUrlTile = void 0;
+ const React = __importStar(require("react"));
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapUrlTile extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     render() {
+         const AIRMapUrlTile = this.getNativeComponent();
+         return <AIRMapUrlTile {...this.props}/>;
+diff --git a/node_modules/react-native-maps/lib/MapWMSTile.js b/node_modules/react-native-maps/lib/MapWMSTile.js
+index 4619972..292e8f8 100644
+--- a/node_modules/react-native-maps/lib/MapWMSTile.js
++++ b/node_modules/react-native-maps/lib/MapWMSTile.js
+@@ -27,9 +27,6 @@ exports.MapWMSTile = void 0;
+ const React = __importStar(require("react"));
+ const decorateMapComponent_1 = __importStar(require("./decorateMapComponent"));
+ class MapWMSTile extends React.Component {
+-    getNativeComponent;
+-    getMapManagerCommand;
+-    getUIManagerCommand;
+     render() {
+         const AIRMapWMSTile = this.getNativeComponent();
+         return <AIRMapWMSTile {...this.props}/>;

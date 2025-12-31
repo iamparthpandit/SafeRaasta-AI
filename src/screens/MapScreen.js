@@ -15,6 +15,8 @@ import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { getDirections } from '../services/directionsService';
+import routeSafetyService from '../services/routeSafetyService';
+import RouteSafetySummary from '../components/RouteSafetySummary';
 import { GOOGLE_API_KEY } from '../config/keys';
 import { requestLocationPermission } from '../services/permissionsService';
 import colors from '../theme/colors';
@@ -35,6 +37,8 @@ export default function MapScreen() {
   // Route states
   const [routes, setRoutes] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(null);
+  const [safestRouteIndex, setSafestRouteIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [navigationSteps, setNavigationSteps] = useState([]);
@@ -97,22 +101,60 @@ export default function MapScreen() {
         console.log('Routes found:', result.routes.length);
         console.log('First route coords length:', result.routes[0].coords?.length);
         console.log('First route distance:', result.routes[0].distance);
+        // First show raw routes so user has immediate feedback
         setRoutes(result.routes);
-        setSelectedRoute(result.routes[0]);
-        
-        // Extract navigation steps from the route
-        if (result.routes[0].steps) {
-          setNavigationSteps(result.routes[0].steps);
-        }
-        
-        // Fit map to show the route
-        if (mapRef.current && result.routes[0].coords && result.routes[0].coords.length > 0) {
-          setTimeout(() => {
-            mapRef.current.fitToCoordinates(result.routes[0].coords, {
-              edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
-              animated: true,
-            });
-          }, 500);
+
+        try {
+          const travelTime = (new Date().getHours() >= 18 || new Date().getHours() < 6) ? 'night' : 'day';
+          const safety = await routeSafetyService.analyzeRoutes({
+            routes: result.routes,
+            origin,
+            destination,
+            travelTime,
+            city: 'Unknown', // minimal change - use a safe default
+          });
+
+          console.log('Route Safety analysis complete');
+          safety.routes.forEach(r => {
+            console.log('Route Safety:', r.safetyCategory, r.safetyScore);
+          });
+
+          // Replace routes with enriched routes and select the safest
+          setRoutes(safety.routes);
+          setSafestRouteIndex(safety.safestRouteIndex);
+          const safest = (safety.routes && safety.routes[safety.safestRouteIndex]) ? safety.routes[safety.safestRouteIndex] : safety.routes[0];
+          setSelectedRoute(safest);
+          setSelectedRouteIndex(safest.index);
+
+          // Extract navigation steps from the selected route
+          if (safest && safest.steps) {
+            setNavigationSteps(safest.steps);
+          }
+
+          // Fit map to show the safest route
+          if (mapRef.current && safest && safest.coords && safest.coords.length > 0) {
+            setTimeout(() => {
+              mapRef.current.fitToCoordinates(safest.coords, {
+                edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
+                animated: true,
+              });
+            }, 500);
+          }
+        } catch (error) {
+          console.error('Route safety analysis failed:', error);
+          // Fallback to the first route
+          setSelectedRoute(result.routes[0]);
+          if (result.routes[0].steps) {
+            setNavigationSteps(result.routes[0].steps);
+          }
+          if (mapRef.current && result.routes[0].coords && result.routes[0].coords.length > 0) {
+            setTimeout(() => {
+              mapRef.current.fitToCoordinates(result.routes[0].coords, {
+                edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
+                animated: true,
+              });
+            }, 500);
+          }
         }
       } else {
         console.log('No routes found');
@@ -233,6 +275,46 @@ export default function MapScreen() {
     return `${hours}h ${remainingMinutes}m`;
   };
 
+  const handleSelectRoute = (route) => {
+    console.log('User selected route:', route.index, route.safetyCategory, route.safetyScore);
+    setSelectedRoute(route);
+    setSelectedRouteIndex(route.index);
+    setNavigationSteps(route.steps || []);
+
+    // Optionally fit map to the selected route bounds
+    if (mapRef.current && route.coords && route.coords.length > 0) {
+      setTimeout(() => {
+        mapRef.current.fitToCoordinates(route.coords, {
+          edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
+          animated: true,
+        });
+      }, 200);
+    }
+  };
+
+  const handleSwitchToSaferRoute = () => {
+    if (safestRouteIndex === null || safestRouteIndex === undefined) return;
+    const safer = routes[safestRouteIndex];
+    if (!safer) return;
+
+    console.log('Switched to safer route:', safestRouteIndex);
+
+    // Update selected route index and selected route object without re-running agents
+    setSelectedRouteIndex(safestRouteIndex);
+    setSelectedRoute(safer);
+    setNavigationSteps(safer.steps || []);
+
+    // Fit map to safer route
+    if (mapRef.current && safer.coords && safer.coords.length > 0) {
+      setTimeout(() => {
+        mapRef.current.fitToCoordinates(safer.coords, {
+          edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
+          animated: true,
+        });
+      }, 200);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -281,16 +363,27 @@ export default function MapScreen() {
           />
         )}
 
-        {/* Route Polyline */}
-        {selectedRoute && selectedRoute.coords && selectedRoute.coords.length > 0 && (
-          <Polyline
-            coordinates={selectedRoute.coords}
-            strokeWidth={isNavigating ? 6 : 5}
-            strokeColor={isNavigating ? '#4285F4' : colors.primary}
-            lineCap="round"
-            lineJoin="round"
-          />
-        )}
+        {/* Route Polylines with safety coloring */}
+        {routes && routes.length > 0 && routes.map((r) => {
+          const isSelected = selectedRoute && r.index === selectedRoute.index;
+          const category = r.safetyCategory || null;
+          const color = category === 'Safe' ? '#00C853' : (category === 'Moderate' ? '#FFC107' : (category === 'Risky' ? '#FF5252' : colors.primary));
+          const strokeWidth = isSelected ? (isNavigating ? 8 : 6) : 3;
+          const lineDashPattern = isSelected ? undefined : [10, 6];
+
+          return (
+            <Polyline
+              key={`route-${r.index}`}
+              coordinates={r.coords}
+              strokeWidth={strokeWidth}
+              strokeColor={color}
+              lineDashPattern={lineDashPattern}
+              lineCap="round"
+              lineJoin="round"
+              onPress={() => handleSelectRoute(r)}
+            />
+          );
+        })}
       </MapView>
 
       {/* Input Card - Hide during navigation */}
@@ -481,6 +574,25 @@ export default function MapScreen() {
           <Text style={styles.mapControlIcon}>📍</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Route Safety Summary - non-blocking bottom sheet */}
+      <RouteSafetySummary
+        selectedRoute={selectedRoute ? {
+          safetyScore: selectedRoute.safetyScore ?? null,
+          safetyCategory: selectedRoute.safetyCategory ?? null,
+          explanation: selectedRoute.explanation ?? null,
+          distance: selectedRoute.distance ?? null,
+          duration: selectedRoute.duration ?? null,
+          index: selectedRoute.index ?? null,
+        } : null}
+        safestRoute={safestRouteIndex !== null ? {
+          index: safestRouteIndex,
+          safetyScore: routes[safestRouteIndex]?.safetyScore ?? 0,
+          safetyCategory: routes[safestRouteIndex]?.safetyCategory,
+          duration: routes[safestRouteIndex]?.duration,
+        } : null}
+        onSwitchToSafer={handleSwitchToSaferRoute}
+      />
     </View>
   );
 }

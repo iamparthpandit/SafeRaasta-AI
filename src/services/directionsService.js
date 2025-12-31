@@ -92,7 +92,9 @@ export async function getDirections(origin, destination, alternatives = true) {
 
       return {
         index,
+        // keep both decoded coords and the encoded polyline string (used by analysis agents)
         coords: decodePolyline(route.overview_polyline?.points),
+        polyline: route.overview_polyline?.points || '',
         distance: leg?.distance?.value ?? 0,
         duration: leg?.duration?.value ?? 0,
         summary: route.summary || '',

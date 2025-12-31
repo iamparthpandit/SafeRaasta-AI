@@ -1,146 +1,89 @@
-// routePipeline.ts
-// Orchestrates all SafeRaasta agentic stages in correct order
-
 import { routeAnalysisAgent } from './routeAnalysisAgent';
 import { routeIntelligenceAgent } from './routeIntelligenceAgent';
 import { routeSafetyScoringAgent } from './routeSafetyScoringAgent';
-import { routeDecisionAgent } from './routeDecisionAgent';
 
-import {
-  RouteAnalysis,
-  RouteDecision,
-  SafetyCategory,
-} from './types';
-
-// ===============================
-// INPUT / OUTPUT TYPES
-// ===============================
-
-export interface RoutePipelineInput {
-  origin: { lat: number; lng: number };
-  destination: { lat: number; lng: number };
-  polyline: string;
-  distance: number; // meters
-  duration: number; // seconds
+export interface RouteInputForPipeline {
+  route: {
+    index: number;
+    coords: Array<{ latitude: number; longitude: number }>;
+    polyline?: string;
+    distance: number;
+    duration: number;
+    summary?: string;
+  };
+  origin: { latitude: number; longitude: number };
+  destination: { latitude: number; longitude: number };
   travelTime: 'day' | 'night';
   city: string;
+}
+
+export interface AnalyzedRouteOutput {
+  routeId: string;
   originalRouteIndex: number;
+  distance: number;
+  duration: number;
+  safetyScore: number;
+  safetyCategory: 'Safe' | 'Moderate' | 'Risky';
+  explanation: string[];
 }
 
-export interface RoutePipelineOutput {
-  analysis: RouteAnalysis;
-  decision: RouteDecision;
-}
-
-// ===============================
-// PIPELINE FUNCTION
-// ===============================
-
-export async function routePipeline(
-  input: RoutePipelineInput
-): Promise<RoutePipelineOutput> {
-  console.log('[Pipeline] Starting SafeRaasta route analysis');
-
-  // ===============================
-  // STAGE 1: STRUCTURAL ANALYSIS
-  // ===============================
-  const analysisOutput = await routeAnalysisAgent({
-    origin: input.origin,
-    destination: input.destination,
-    polyline: input.polyline,
-    distance: input.distance,
-    duration: input.duration,
+/**
+ * Simple orchestrator that runs the agents for a single route
+ */
+export async function routePipeline(input: RouteInputForPipeline): Promise<AnalyzedRouteOutput> {
+  const analysis = await routeAnalysisAgent({
+    origin: { lat: input.origin.latitude, lng: input.origin.longitude },
+    destination: { lat: input.destination.latitude, lng: input.destination.longitude },
+    polyline: input.route.polyline || '',
+    distance: input.route.distance,
+    duration: input.route.duration,
     travelTime: input.travelTime,
     city: input.city,
   });
 
-  // ===============================
-  // STAGE 2: INTELLIGENCE (WEB + DATA)
-  // ===============================
-  const intelligenceOutput = await routeIntelligenceAgent({
-    city: analysisOutput.metadata.city,
-    travelTime: analysisOutput.metadata.travelTime,
-    routeSegments: analysisOutput.routeSegments.map(seg => ({
-      id: seg.id,
-      segmentType: seg.segmentType,
-      distance: seg.distance,
-      characteristics: seg.characteristics,
+  const intelligence = await routeIntelligenceAgent({
+    city: input.city,
+    travelTime: input.travelTime,
+    routeSegments: analysis.routeSegments.map(s => ({
+      id: s.id,
+      segmentType: s.segmentType,
+      distance: s.distance,
+      characteristics: s.characteristics,
     })),
-    riskSignals: analysisOutput.riskSignals.map(signal => ({
-      signalType: signal.signalType,
-      severity: signal.severity,
+    riskSignals: analysis.riskSignals.map(s => ({
+      signalType: s.signalType,
+      severity: s.severity,
     })),
   });
 
-  // ===============================
-  // STAGE 3: SAFETY SCORING
-  // ===============================
-  const scoringOutput = routeSafetyScoringAgent({
-    routeId: analysisOutput.routeId,
-    city: analysisOutput.metadata.city,
-    travelTime: analysisOutput.metadata.travelTime,
-    routeSegments: analysisOutput.routeSegments,
-    structuralSignals: analysisOutput.riskSignals,
+  const scoring = routeSafetyScoringAgent({
+    routeId: analysis.routeId,
+    city: input.city,
+    travelTime: input.travelTime,
+    routeSegments: analysis.routeSegments.map(s => ({
+      id: s.id,
+      segmentType: s.segmentType,
+      distance: s.distance,
+      estimatedDuration: s.estimatedDuration,
+      characteristics: s.characteristics,
+    })),
+    structuralSignals: analysis.riskSignals,
     intelligenceSummary: {
-      crimeMentions: intelligenceOutput.identifiedRiskFactors.filter(f => f.type === 'crime').length,
-      accidentMentions: intelligenceOutput.identifiedRiskFactors.filter(f => f.type === 'traffic').length,
-      lightingIssues: intelligenceOutput.identifiedRiskFactors.some(f =>
-        f.description.toLowerCase().includes('lighting')
-      ),
-      womenSafetyConcerns: intelligenceOutput.identifiedRiskFactors.some(f =>
-        f.description.toLowerCase().includes('women')
-      ),
-      policeAdvisories: intelligenceOutput.identifiedRiskFactors
-        .filter(f => f.description.toLowerCase().includes('advisory'))
-        .map(f => f.description),
-      sentiment:
-        intelligenceOutput.overallContext === 'safe'
-          ? 'positive'
-          : intelligenceOutput.overallContext === 'caution'
-          ? 'negative'
-          : 'neutral',
-    },
+      crimeMention: intelligence.flags.crimeMention ? 1 : 0,
+      accidentMentions: 0,
+      lightingIssue: intelligence.flags.lightingIssue,
+      womenSafetyConcern: intelligence.flags.womenSafetyConcern,
+      policeAdvisory: intelligence.flags.policeAdvisory,
+    } as any,
   });
-
-  // ===============================
-  // STAGE 4: DECISION MAKING
-  // ===============================
-  const decisionOutput = await routeDecisionAgent([
-    {
-      routeId: scoringOutput.routeId,
-      distance: input.distance,
-      duration: input.duration,
-      safetyScore: scoringOutput.safetyScore,
-      safetyCategory: scoringOutput.category as SafetyCategory,
-      explanation: scoringOutput.reasons,
-      originalRouteIndex: input.originalRouteIndex,
-    },
-  ]);
-
-  // ===============================
-  // FINAL OUTPUT
-  // ===============================
-  const analysis: RouteAnalysis = {
-    routeId: scoringOutput.routeId,
-    distance: input.distance,
-    duration: input.duration,
-    safetyScore: scoringOutput.safetyScore,
-    safetyCategory: scoringOutput.category as SafetyCategory,
-    explanation: scoringOutput.reasons,
-    originalRouteIndex: input.originalRouteIndex,
-  };
-
-  const decision: RouteDecision = {
-    selectedRouteIndex: decisionOutput.selectedRouteIndex,
-    selectedRouteId: decisionOutput.selectedRouteId,
-    decisionReason: decisionOutput.decisionReason,
-    comparisonSummary: decisionOutput.comparisonSummary,
-  };
-
-  console.log('[Pipeline] Completed successfully');
 
   return {
-    analysis,
-    decision,
+    routeId: scoring.routeId,
+    distance: input.route.distance,
+    duration: input.route.duration,
+    safetyScore: scoring.safetyScore,
+    safetyCategory: scoring.category,
+    explanation: scoring.reasons,
+    originalRouteIndex: input.route.index,
   };
 }
