@@ -41,6 +41,7 @@ export default function MapScreen() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   // Get current location on mount
+  // This effect runs once when the component mounts to get the user's location
   useEffect(() => {
     requestPermissionAndGetLocation();
   }, []);
