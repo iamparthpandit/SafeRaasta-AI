@@ -13,6 +13,10 @@ import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
 import { signUpWithEmail } from '../services/authService';
 
+interface SignUpScreenProps {
+  navigation?: any;
+}
+
 // Icon components
 const UserIcon = () => (
   <Image
@@ -85,7 +89,8 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
         navigation.navigate('Landing');
       }
     } catch (error) {
-      Alert.alert('Sign Up Failed', error.message);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Sign Up Failed', errorMessage);
     } finally {
       setLoading(false);
     }

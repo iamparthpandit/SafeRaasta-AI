@@ -41,12 +41,33 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
     setLoading(true);
     try {
       const result = await sendPasswordReset(email);
-      Alert.alert('Success', result.message);
-      console.log('Password reset email sent to:', email);
-      // Optionally navigate back to login after success
-      // navigation.goBack();
+      Alert.alert('Success', result.message, [
+        {
+          text: 'OK',
+          onPress: () => {
+            console.log('Password reset email sent to:', email);
+            // Optionally navigate back to login after success
+            // navigation?.goBack();
+          }
+        }
+      ]);
     } catch (error) {
-      Alert.alert('Reset Failed', error.message);
+      console.error('Reset error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred. Please check if the email exists and try again.';
+      Alert.alert(
+        'Email Not Sent',
+        errorMessage,
+        [
+          {
+            text: 'Try Again',
+            onPress: () => setEmail(email) // Keep the email for retry
+          },
+          {
+            text: 'Back to Login',
+            onPress: () => handleBackToLogin()
+          }
+        ]
+      );
     } finally {
       setLoading(false);
     }

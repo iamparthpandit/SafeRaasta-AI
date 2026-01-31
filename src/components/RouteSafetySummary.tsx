@@ -32,13 +32,11 @@ export default function RouteSafetySummary({ selectedRoute, safestRoute, onSwitc
 
   const bullets = (explanation || []).slice(0, MAX_EXPLANATIONS);
 
-  // CTA logic - use deterministic condition
-  const showSaferRouteCTA =
+  // CTA logic - show whenever an alternate exists (demo/testing)
+  const showCTA =
     selectedRoute &&
-    selectedRoute.safetyCategory !== 'Safe' &&
     safestRoute &&
-    safestRoute.safetyScore > (selectedRoute.safetyScore ?? 0) &&
-    safestRoute.index !== (selectedRoute.index ?? null);
+    safestRoute.index !== selectedRoute.index;
 
   const timeDiffMinutes = (safestRoute && selectedRoute && typeof safestRoute.duration === 'number' && typeof selectedRoute.duration === 'number') ? Math.round((safestRoute.duration - selectedRoute.duration) / 60) : null;
 
@@ -63,7 +61,7 @@ export default function RouteSafetySummary({ selectedRoute, safestRoute, onSwitc
             </View>
           )}
 
-          {showSaferRouteCTA && (
+          {showCTA && (
             <View style={[styles.ctaContainer, selectedRoute.safetyCategory === 'Risky' ? styles.ctaRisky : styles.ctaModerate]}>
               <Text style={styles.ctaTitle}>Safer route available</Text>
               <Text style={styles.ctaSubtitle}>{timeDiffMinutes !== null ? `Adds ${timeDiffMinutes > 0 ? `+${timeDiffMinutes} min` : '+0 min'} • Much safer` : 'Much safer'}</Text>

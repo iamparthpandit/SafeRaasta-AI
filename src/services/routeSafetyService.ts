@@ -2,7 +2,7 @@ import { routePipeline } from '../agents/routePipeline';
 import { routeDecisionAgent } from '../agents/routeDecisionAgent';
 
 /**
- * Input/Output types (lightweight)
+ * Input/Output types
  */
 export interface GoogleRoute {
   index: number;
@@ -21,45 +21,81 @@ export interface AnalyzeRoutesInput {
   city: string;
 }
 
-export async function analyzeRoutes(input: AnalyzeRoutesInput) {
+export interface AnalyzedRoute {
+  index: number;
+  coords: Array<{ latitude: number; longitude: number }>;
+  polyline?: string;
+  distance: number;
+  duration: number;
+  summary?: string;
+  safetyScore: number;
+  safetyCategory: 'Safe' | 'Moderate' | 'Risky';
+  explanation: string[];
+}
+
+export interface AnalyzeRoutesOutput {
+  routes: AnalyzedRoute[];
+  safestRouteIndex: number;
+}
+
+/**
+ * Analyze all Google routes and find the safest one
+ */
+export async function analyzeRoutes(
+  input: AnalyzeRoutesInput
+): Promise<AnalyzeRoutesOutput> {
   const { routes, origin, destination, travelTime, city } = input;
 
-  // Run pipeline for each route in parallel
-  const analyzedPromises = routes.map((r) =>
-    routePipeline({ route: r, origin, destination, travelTime, city })
+  // 1️⃣ Run full agent pipeline for each route
+  const analyzedResults = await Promise.all(
+    routes.map(route =>
+      routePipeline({
+        route,
+        origin,
+        destination,
+        travelTime,
+        city,
+      })
+    )
   );
 
-  const analyzed = await Promise.all(analyzedPromises);
-
-  // Call decision agent to select the safest route index
+  // 2️⃣ Ask decision agent which route is safest
   const decision = await routeDecisionAgent(
-    analyzed.map(a => ({
-      routeId: a.routeId,
-      distance: a.distance,
-      duration: a.duration,
-      safetyScore: a.safetyScore,
-      safetyCategory: a.safetyCategory,
-      explanation: a.explanation,
-      originalRouteIndex: a.originalRouteIndex,
+    analyzedResults.map(r => ({
+      routeId: r.routeId,
+      distance: r.distance,
+      duration: r.duration,
+      safetyScore: r.safetyScore,
+      safetyCategory: r.safetyCategory,
+      explanation: r.explanation,
+      originalRouteIndex: r.originalRouteIndex,
     }))
   );
 
-  const safestIndex = decision.selectedRouteIndex;
+  const safestRouteIndex = decision.selectedRouteIndex;
 
-  // Enrich original routes with safety data
-  const enrichedRoutes = routes.map((r) => {
-    const match = analyzed.find(a => a.originalRouteIndex === r.index);
+  // 3️⃣ Merge safety data back into Google routes
+  const enrichedRoutes: AnalyzedRoute[] = routes.map(route => {
+    const analysis = analyzedResults.find(
+      a => a.originalRouteIndex === route.index
+    );
+
     return {
-      ...r,
-      safetyScore: match ? match.safetyScore : null,
-      safetyCategory: match ? match.safetyCategory : null,
-      explanation: match ? match.explanation : [],
+      index: route.index,
+      coords: route.coords,
+      polyline: route.polyline,
+      distance: route.distance,
+      duration: route.duration,
+      summary: route.summary,
+      safetyScore: analysis?.safetyScore ?? 0,
+      safetyCategory: analysis?.safetyCategory ?? 'Moderate',
+      explanation: analysis?.explanation ?? [],
     };
   });
 
   return {
     routes: enrichedRoutes,
-    safestRouteIndex: safestIndex,
+    safestRouteIndex,
   };
 }
 

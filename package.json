@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-google-signin/google-signin": "^16.1.1",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/stack": "^7.6.13",
     "firebase": "^12.7.0",
@@ -20,7 +21,10 @@
     "react-native-geolocation-service": "^5.3.1",
     "react-native-google-places-autocomplete": "^2.6.3",
     "react-native-maps": "1.14.0",
-    "react-native-permissions": "^5.4.4"
+    "react-native-permissions": "^5.4.4",
+    "react-native-send-sms": "^1.0.1",
+    "react-native-sms": "^1.12.0",
+    "react-native-sms-x": "^1.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

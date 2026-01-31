@@ -28,9 +28,16 @@ export interface AnalyzedRouteOutput {
 }
 
 /**
- * Simple orchestrator that runs the agents for a single route
+ * Orchestrates Agent 1 → Agent 2 → Agent 3
+ * Deterministic, stable pipeline
  */
-export async function routePipeline(input: RouteInputForPipeline): Promise<AnalyzedRouteOutput> {
+export async function routePipeline(
+  input: RouteInputForPipeline
+): Promise<AnalyzedRouteOutput> {
+
+  // =====================
+  // Agent 1: Structure
+  // =====================
   const analysis = await routeAnalysisAgent({
     origin: { lat: input.origin.latitude, lng: input.origin.longitude },
     destination: { lat: input.destination.latitude, lng: input.destination.longitude },
@@ -41,6 +48,9 @@ export async function routePipeline(input: RouteInputForPipeline): Promise<Analy
     city: input.city,
   });
 
+  // =====================
+  // Agent 2: Intelligence
+  // =====================
   const intelligence = await routeIntelligenceAgent({
     city: input.city,
     travelTime: input.travelTime,
@@ -56,9 +66,11 @@ export async function routePipeline(input: RouteInputForPipeline): Promise<Analy
     })),
   });
 
+  // =====================
+  // Agent 3: Scoring
+  // =====================
   const scoring = routeSafetyScoringAgent({
     routeId: analysis.routeId,
-    city: input.city,
     travelTime: input.travelTime,
     routeSegments: analysis.routeSegments.map(s => ({
       id: s.id,
@@ -68,22 +80,19 @@ export async function routePipeline(input: RouteInputForPipeline): Promise<Analy
       characteristics: s.characteristics,
     })),
     structuralSignals: analysis.riskSignals,
-    intelligenceSummary: {
-      crimeMention: intelligence.flags.crimeMention ? 1 : 0,
-      accidentMentions: 0,
-      lightingIssue: intelligence.flags.lightingIssue,
-      womenSafetyConcern: intelligence.flags.womenSafetyConcern,
-      policeAdvisory: intelligence.flags.policeAdvisory,
-    } as any,
+    intelligenceFlags: intelligence.flags, // ✅ CORRECT MAPPING
   });
 
+  // =====================
+  // Final Output
+  // =====================
   return {
     routeId: scoring.routeId,
+    originalRouteIndex: input.route.index,
     distance: input.route.distance,
     duration: input.route.duration,
     safetyScore: scoring.safetyScore,
     safetyCategory: scoring.category,
     explanation: scoring.reasons,
-    originalRouteIndex: input.route.index,
   };
 }
