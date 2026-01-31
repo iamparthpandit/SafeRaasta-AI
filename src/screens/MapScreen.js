@@ -21,7 +21,7 @@ import { GOOGLE_API_KEY } from '../config/keys';
 import { requestLocationPermission } from '../services/permissionsService';
 import colors from '../theme/colors';
 
-export default function MapScreen() {
+export default function MapScreen({ navigation }) {
   const mapRef = useRef(null);
   const originInputRef = useRef(null);
   const destinationInputRef = useRef(null);
@@ -58,7 +58,7 @@ export default function MapScreen() {
 
   const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         const location = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -66,7 +66,7 @@ export default function MapScreen() {
         setCurrentLocation(location);
         setOrigin(location);
       },
-      (error) => {
+      error => {
         console.log('Location error:', error);
         Alert.alert('Location Error', 'Unable to get current location');
         // Default to Bangalore
@@ -74,7 +74,7 @@ export default function MapScreen() {
         setCurrentLocation(defaultLocation);
         setOrigin(defaultLocation);
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
     );
   };
 
@@ -90,22 +90,28 @@ export default function MapScreen() {
     setLoading(true); // FIX: Added missing setLoading(true)
     try {
       const result = await getDirections(origin, destination, true);
-      
+
       console.log('Route result:', result);
-      
+
       if (result.error) {
         Alert.alert('Route Error', result.error);
         setRoutes([]);
         setSelectedRoute(null);
       } else if (result.routes && result.routes.length > 0) {
         console.log('Routes found:', result.routes.length);
-        console.log('First route coords length:', result.routes[0].coords?.length);
+        console.log(
+          'First route coords length:',
+          result.routes[0].coords?.length,
+        );
         console.log('First route distance:', result.routes[0].distance);
         // First show raw routes so user has immediate feedback
         setRoutes(result.routes);
 
         try {
-          const travelTime = (new Date().getHours() >= 18 || new Date().getHours() < 6) ? 'night' : 'day';
+          const travelTime =
+            new Date().getHours() >= 18 || new Date().getHours() < 6
+              ? 'night'
+              : 'day';
           const safety = await routeSafetyService.analyzeRoutes({
             routes: result.routes,
             origin,
@@ -122,7 +128,10 @@ export default function MapScreen() {
           // Replace routes with enriched routes and select the safest
           setRoutes(safety.routes);
           setSafestRouteIndex(safety.safestRouteIndex);
-          const safest = (safety.routes && safety.routes[safety.safestRouteIndex]) ? safety.routes[safety.safestRouteIndex] : safety.routes[0];
+          const safest =
+            safety.routes && safety.routes[safety.safestRouteIndex]
+              ? safety.routes[safety.safestRouteIndex]
+              : safety.routes[0];
           setSelectedRoute(safest);
           setSelectedRouteIndex(safest.index);
 
@@ -132,7 +141,12 @@ export default function MapScreen() {
           }
 
           // Fit map to show the safest route
-          if (mapRef.current && safest && safest.coords && safest.coords.length > 0) {
+          if (
+            mapRef.current &&
+            safest &&
+            safest.coords &&
+            safest.coords.length > 0
+          ) {
             setTimeout(() => {
               mapRef.current.fitToCoordinates(safest.coords, {
                 edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
@@ -147,7 +161,11 @@ export default function MapScreen() {
           if (result.routes[0].steps) {
             setNavigationSteps(result.routes[0].steps);
           }
-          if (mapRef.current && result.routes[0].coords && result.routes[0].coords.length > 0) {
+          if (
+            mapRef.current &&
+            result.routes[0].coords &&
+            result.routes[0].coords.length > 0
+          ) {
             setTimeout(() => {
               mapRef.current.fitToCoordinates(result.routes[0].coords, {
                 edgePadding: { top: 200, right: 60, bottom: 400, left: 60 },
@@ -187,7 +205,7 @@ export default function MapScreen() {
       };
       setDestination(location);
       setDestinationText(data.description);
-      
+
       // Animate map to show both origin and destination
       if (mapRef.current && origin) {
         setTimeout(() => {
@@ -206,11 +224,15 @@ export default function MapScreen() {
   };
 
   const startNavigation = () => {
-    if (!selectedRoute || !selectedRoute.coords || selectedRoute.coords.length === 0) {
+    if (
+      !selectedRoute ||
+      !selectedRoute.coords ||
+      selectedRoute.coords.length === 0
+    ) {
       Alert.alert('No Route', 'Please wait for the route to be calculated');
       return;
     }
-    
+
     // First, fit the map to show the full route with proper padding for navigation panel
     if (mapRef.current && selectedRoute.coords.length > 0) {
       mapRef.current.fitToCoordinates(selectedRoute.coords, {
@@ -218,7 +240,7 @@ export default function MapScreen() {
         animated: true,
       });
     }
-    
+
     // Animate card out and navigation panel in
     Animated.timing(cardAnimValue, {
       toValue: 0,
@@ -236,7 +258,7 @@ export default function MapScreen() {
       duration: 400,
       useNativeDriver: true,
     }).start();
-    
+
     // Reset navigation state after animation starts
     setTimeout(() => {
       setIsNavigating(false);
@@ -245,27 +267,30 @@ export default function MapScreen() {
       setDestination(null);
       setDestinationText('');
       setCurrentStepIndex(0);
-      
+
       // Zoom back to current location
       if (mapRef.current && currentLocation) {
-        mapRef.current.animateToRegion({
-          latitude: currentLocation.latitude,
-          longitude: currentLocation.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }, 1000);
+        mapRef.current.animateToRegion(
+          {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          },
+          1000,
+        );
       }
     }, 200);
   };
 
-  const formatDistance = (meters) => {
+  const formatDistance = meters => {
     if (meters < 1000) {
       return `${Math.round(meters)} m`;
     }
     return `${(meters / 1000).toFixed(1)} km`;
   };
 
-  const formatDuration = (seconds) => {
+  const formatDuration = seconds => {
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) {
       return `${minutes} min`;
@@ -275,8 +300,13 @@ export default function MapScreen() {
     return `${hours}h ${remainingMinutes}m`;
   };
 
-  const handleSelectRoute = (route) => {
-    console.log('User selected route:', route.index, route.safetyCategory, route.safetyScore);
+  const handleSelectRoute = route => {
+    console.log(
+      'User selected route:',
+      route.index,
+      route.safetyCategory,
+      route.safetyScore,
+    );
     setSelectedRoute(route);
     setSelectedRouteIndex(route.index);
     setNavigationSteps(route.steps || []);
@@ -293,9 +323,13 @@ export default function MapScreen() {
   };
 
   const handleSwitchToSaferRoute = () => {
-    if (safestRouteIndex === null || safestRouteIndex === undefined) return;
+    if (safestRouteIndex === null || safestRouteIndex === undefined) {
+      return;
+    }
     const safer = routes[safestRouteIndex];
-    if (!safer) return;
+    if (!safer) {
+      return;
+    }
 
     console.log('Switched to safer route:', safestRouteIndex);
 
@@ -347,43 +381,46 @@ export default function MapScreen() {
       >
         {/* Origin Marker */}
         {origin && !isNavigating && (
-          <Marker
-            coordinate={origin}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
+          <Marker coordinate={origin} anchor={{ x: 0.5, y: 0.5 }}>
             <View style={styles.originMarker} />
           </Marker>
         )}
 
         {/* Destination Marker */}
         {destination && (
-          <Marker
-            coordinate={destination}
-            pinColor={colors.primary}
-          />
+          <Marker coordinate={destination} pinColor={colors.primary} />
         )}
 
         {/* Route Polylines with safety coloring */}
-        {routes && routes.length > 0 && routes.map((r) => {
-          const isSelected = selectedRoute && r.index === selectedRoute.index;
-          const category = r.safetyCategory || null;
-          const color = category === 'Safe' ? '#00C853' : (category === 'Moderate' ? '#FFC107' : (category === 'Risky' ? '#FF5252' : colors.primary));
-          const strokeWidth = isSelected ? (isNavigating ? 8 : 6) : 3;
-          const lineDashPattern = isSelected ? undefined : [10, 6];
+        {routes &&
+          routes.length > 0 &&
+          routes.map(r => {
+            const isSelected = selectedRoute && r.index === selectedRoute.index;
+            const category = r.safetyCategory || null;
+            const color =
+              category === 'Safe'
+                ? '#00C853'
+                : category === 'Moderate'
+                ? '#FFC107'
+                : category === 'Risky'
+                ? '#FF5252'
+                : colors.primary;
+            const strokeWidth = isSelected ? (isNavigating ? 8 : 6) : 3;
+            const lineDashPattern = isSelected ? undefined : [10, 6];
 
-          return (
-            <Polyline
-              key={`route-${r.index}`}
-              coordinates={r.coords}
-              strokeWidth={strokeWidth}
-              strokeColor={color}
-              lineDashPattern={lineDashPattern}
-              lineCap="round"
-              lineJoin="round"
-              onPress={() => handleSelectRoute(r)}
-            />
-          );
-        })}
+            return (
+              <Polyline
+                key={`route-${r.index}`}
+                coordinates={r.coords}
+                strokeWidth={strokeWidth}
+                strokeColor={color}
+                lineDashPattern={lineDashPattern}
+                lineCap="round"
+                lineJoin="round"
+                onPress={() => handleSelectRoute(r)}
+              />
+            );
+          })}
       </MapView>
 
       {/* Input Card - Hide during navigation */}
@@ -435,11 +472,16 @@ export default function MapScreen() {
                   predefinedPlaces={[
                     {
                       description: 'Current Location',
-                      geometry: { location: { lat: currentLocation?.latitude || 12.9716, lng: currentLocation?.longitude || 77.5946 } },
+                      geometry: {
+                        location: {
+                          lat: currentLocation?.latitude || 12.9716,
+                          lng: currentLocation?.longitude || 77.5946,
+                        },
+                      },
                     },
                   ]}
                   renderRightButton={() => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={handleUseCurrentLocation}
                       style={styles.currentLocationBtn}
                     >
@@ -480,7 +522,7 @@ export default function MapScreen() {
             </View>
 
             {/* Start Navigation Button - Always visible */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.startNavigationBtn}
               onPress={startNavigation}
               activeOpacity={0.8}
@@ -494,7 +536,9 @@ export default function MapScreen() {
             {loading && (
               <View style={styles.loadingRouteContainer}>
                 <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.loadingRouteText}>Finding best route...</Text>
+                <Text style={styles.loadingRouteText}>
+                  Finding best route...
+                </Text>
               </View>
             )}
           </View>
@@ -503,7 +547,7 @@ export default function MapScreen() {
 
       {/* Navigation Info Panel */}
       {isNavigating && selectedRoute && (
-        <Animated.View 
+        <Animated.View
           style={[
             styles.navigationPanel,
             {
@@ -528,26 +572,36 @@ export default function MapScreen() {
                 {formatDistance(selectedRoute.distance)}
               </Text>
               <Text style={styles.navigationDuration}>
-                {formatDuration(selectedRoute.duration)} • ETA {new Date(Date.now() + selectedRoute.duration * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                {formatDuration(selectedRoute.duration)} • ETA{' '}
+                {new Date(
+                  Date.now() + selectedRoute.duration * 1000,
+                ).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.stopNavigationBtn}
               onPress={stopNavigation}
             >
               <Text style={styles.stopNavigationText}>✕</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.navigationDirections}>
             <View style={styles.routeInfoRow}>
               <View style={styles.routeDot} />
-              <Text style={styles.routeText} numberOfLines={1}>{originText}</Text>
+              <Text style={styles.routeText} numberOfLines={1}>
+                {originText}
+              </Text>
             </View>
             <View style={styles.routeLine} />
             <View style={styles.routeInfoRow}>
               <View style={[styles.routeDot, styles.destinationDot]} />
-              <Text style={styles.routeText} numberOfLines={1}>{destinationText}</Text>
+              <Text style={styles.routeText} numberOfLines={1}>
+                {destinationText}
+              </Text>
             </View>
           </View>
 
@@ -567,7 +621,7 @@ export default function MapScreen() {
         <TouchableOpacity style={styles.mapControlButton}>
           <Text style={styles.mapControlIcon}>🧭</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.mapControlButton}
           onPress={getCurrentLocation}
         >
@@ -577,20 +631,28 @@ export default function MapScreen() {
 
       {/* Route Safety Summary - non-blocking bottom sheet */}
       <RouteSafetySummary
-        selectedRoute={selectedRoute ? {
-          safetyScore: selectedRoute.safetyScore ?? null,
-          safetyCategory: selectedRoute.safetyCategory ?? null,
-          explanation: selectedRoute.explanation ?? null,
-          distance: selectedRoute.distance ?? null,
-          duration: selectedRoute.duration ?? null,
-          index: selectedRoute.index ?? null,
-        } : null}
-        safestRoute={safestRouteIndex !== null ? {
-          index: safestRouteIndex,
-          safetyScore: routes[safestRouteIndex]?.safetyScore ?? 0,
-          safetyCategory: routes[safestRouteIndex]?.safetyCategory,
-          duration: routes[safestRouteIndex]?.duration,
-        } : null}
+        selectedRoute={
+          selectedRoute
+            ? {
+                safetyScore: selectedRoute.safetyScore ?? null,
+                safetyCategory: selectedRoute.safetyCategory ?? null,
+                explanation: selectedRoute.explanation ?? null,
+                distance: selectedRoute.distance ?? null,
+                duration: selectedRoute.duration ?? null,
+                index: selectedRoute.index ?? null,
+              }
+            : null
+        }
+        safestRoute={
+          safestRouteIndex !== null
+            ? {
+                index: safestRouteIndex,
+                safetyScore: routes[safestRouteIndex]?.safetyScore ?? 0,
+                safetyCategory: routes[safestRouteIndex]?.safetyCategory,
+                duration: routes[safestRouteIndex]?.duration,
+              }
+            : null
+        }
         onSwitchToSafer={handleSwitchToSaferRoute}
       />
     </View>

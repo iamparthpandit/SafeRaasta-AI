@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
-import { loginWithEmail } from '../services/authService';
+import { loginWithEmail, loginWithGoogle } from '../services/authService';
 
 // Icon components (using Unicode characters for simplicity)
 const EmailIcon = () => (
@@ -61,18 +61,25 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         navigation.navigate('Landing');
       }
     } catch (error) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert('Login Failed', error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    Alert.alert(
-      'Google Sign-In',
-      'Google Sign-In will be implemented soon!',
-      [{ text: 'OK' }]
-    );
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      console.log('Google sign-in user:', result.user);
+      if (navigation) {
+        navigation.navigate('Landing');
+      }
+    } catch (error: any) {
+      Alert.alert('Google Sign-In Failed', error.message || 'Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {

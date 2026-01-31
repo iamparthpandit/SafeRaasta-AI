@@ -15,7 +15,7 @@ if (__DEV__) {
 }
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<'Login' | 'ForgotPassword' | 'SignUp' | 'Landing' | 'Map'>('Map');
+  const [currentScreen, setCurrentScreen] = useState<'Login' | 'ForgotPassword' | 'SignUp' | 'Landing' | 'Map'>('Login');
 
   const navigation = {
     navigate: (screen: 'Login' | 'ForgotPassword' | 'SignUp' | 'Landing' | 'Map') => {
