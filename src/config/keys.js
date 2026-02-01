@@ -1,6 +1,22 @@
-// Put your Google API key here for development/testing.
-// For production it's recommended to store keys in secure env variables
-// (react-native-config, .env, or secrets manager) and not commit them to source.
+// Google API Keys Configuration
+// 
+// SECURITY: API keys are loaded from environment variables (.env file)
+// The .env file is NOT committed to Git (listed in .gitignore)
+// See .env.example for the required variables
 
-export const GOOGLE_API_KEY = 'AIzaSyAE8jFRCCsZ0PtL8JArylXYGg6d2jEZmN4';
-export const GEMINI_API_KEY = 'AIzaSyAoj-3lgdA8MHdAih_TiOXJ-skPyshSTvw';
+import {
+  REACT_APP_GOOGLE_API_KEY,
+  REACT_APP_GEMINI_API_KEY,
+} from '@env';
+
+export const GOOGLE_API_KEY = REACT_APP_GOOGLE_API_KEY || '';
+export const GEMINI_API_KEY = REACT_APP_GEMINI_API_KEY || '';
+
+// Development warnings
+if (!GEMINI_API_KEY && __DEV__) {
+  console.warn('⚠️  GEMINI_API_KEY not found. Check .env file');
+}
+
+if (!GOOGLE_API_KEY && __DEV__) {
+  console.warn('⚠️  GOOGLE_API_KEY not found. Check .env file');
+}
